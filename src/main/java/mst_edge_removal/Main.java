@@ -148,14 +148,12 @@ public class Main {
                 }
             }
 
-            // Список компонент с вершинами (1-based)
             List<List<Integer>> components = new ArrayList<>();
             for (int c = 0; c < compId; c++) components.add(new ArrayList<>());
             for (int v = 0; v < n; v++) {
                 components.get(comp[v]).add(v + 1);
             }
 
-            // 4) Ищем минимальное ребро, соединяющее разные компоненты
             Edge best = null;
             for (Edge e : allEdges) {
                 int u = e.u - 1;
@@ -174,7 +172,6 @@ public class Main {
             int newWeight = 0;
             for (Edge e : mst) newWeight += e.w;
 
-            // 5) Собираем вывод
             OutputData out = new OutputData();
             out.graphId = input.id;
             out.initialMstEdges = initialMstEdges;
@@ -185,7 +182,6 @@ public class Main {
             out.newMstEdges = new ArrayList<>(mst);
             out.newMstWeight = newWeight;
 
-            // Пишем в output.json
             mapper.writerWithDefaultPrettyPrinter()
                     .writeValue(new File("output.json"), out);
 
