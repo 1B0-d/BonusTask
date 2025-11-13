@@ -7,13 +7,13 @@ import java.util.*;
 
 public class Main {
 
-
     public static class Edge implements Comparable<Edge> {
         public int u;
         public int v;
         public int w;
 
-        public Edge() {}
+        public Edge() {
+        }
 
         public Edge(int u, int v, int w) {
             this.u = u;
@@ -25,42 +25,46 @@ public class Main {
         public int compareTo(Edge o) {
             return Integer.compare(this.w, o.w);
         }
-    }
 
+        @Override
+        public String toString() {
+            return u + " - " + v + " (w=" + w + ")";
+        }
+    }
 
     public static class InputGraph {
         public int id;
         public int n;
         public List<Edge> edges;
 
-        public InputGraph() {}
+        public InputGraph() {
+        }
     }
-
 
     public static class InputWrapper {
         public List<InputGraph> graphs;
 
-        public InputWrapper() {}
+        public InputWrapper() {
+        }
     }
 
     public static class OutputData {
         public int graphId;
-
         public List<Edge> initialMstEdges;
         public int initialMstWeight;
-
         public Edge removedEdge;
         public List<List<Integer>> components;
-
         public Edge replacementEdge;
         public List<Edge> newMstEdges;
         public int newMstWeight;
 
-        public OutputData() {}
+        public OutputData() {
+        }
     }
 
     public static class DSU {
-        int[] parent, rank;
+        int[] parent;
+        int[] rank;
 
         DSU(int n) {
             parent = new int[n];
@@ -91,11 +95,9 @@ public class Main {
     public static void main(String[] args) {
         try {
             ObjectMapper mapper = new ObjectMapper();
-
             InputWrapper wrapper = mapper.readValue(new File("inputs.json"), InputWrapper.class);
-
             if (wrapper.graphs == null || wrapper.graphs.isEmpty()) {
-                System.out.println("No graphs in inputs.json");
+                System.out.println("No graphs found in inputs.json");
                 return;
             }
 
@@ -123,11 +125,20 @@ public class Main {
                 return;
             }
 
-
             List<Edge> initialMstEdges = new ArrayList<>(mst);
+
+            System.out.println("Initial MST edges:");
+            for (Edge e : initialMstEdges) {
+                System.out.println("  " + e);
+            }
+            System.out.println("Initial MST total weight: " + mstWeight);
+            System.out.println();
 
             Edge removed = Collections.max(mst, Comparator.comparingInt(e -> e.w));
             mst.remove(removed);
+
+            System.out.println("Removed edge: " + removed);
+            System.out.println();
 
             List<Integer>[] adj = new ArrayList[n];
             for (int i = 0; i < n; i++) adj[i] = new ArrayList<>();
@@ -154,6 +165,16 @@ public class Main {
                 components.get(comp[v]).add(v + 1);
             }
 
+            System.out.println("Components after removal:");
+            for (int i = 0; i < components.size(); i++) {
+                System.out.print("  Component " + i + ": ");
+                for (int v : components.get(i)) {
+                    System.out.print(v + " ");
+                }
+                System.out.println();
+            }
+            System.out.println();
+
             Edge best = null;
             for (Edge e : allEdges) {
                 int u = e.u - 1;
@@ -165,12 +186,23 @@ public class Main {
                 }
             }
 
-            if (best != null) {
-                mst.add(best);
+            if (best == null) {
+                System.out.println("No replacement edge found to reconnect components.");
+                return;
             }
+
+            mst.add(best);
 
             int newWeight = 0;
             for (Edge e : mst) newWeight += e.w;
+
+            System.out.println("Replacement edge: " + best);
+            System.out.println();
+            System.out.println("New MST edges:");
+            for (Edge e : mst) {
+                System.out.println("  " + e);
+            }
+            System.out.println("New MST total weight: " + newWeight);
 
             OutputData out = new OutputData();
             out.graphId = input.id;
@@ -182,16 +214,11 @@ public class Main {
             out.newMstEdges = new ArrayList<>(mst);
             out.newMstWeight = newWeight;
 
-            mapper.writerWithDefaultPrettyPrinter()
-                    .writeValue(new File("output.json"), out);
-
-            System.out.println("Done. See output.json");
-
+            mapper.writerWithDefaultPrettyPrinter().writeValue(new File("output.json"), out);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
-
 
     private static void bfsComponent(int start, int id, int[] comp, List<Integer>[] adj) {
         Queue<Integer> q = new ArrayDeque<>();
